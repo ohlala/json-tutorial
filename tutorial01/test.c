@@ -43,7 +43,7 @@ static void test_parse_null() {
 
 static void test_parse_true() {
 	lept_value v;
-	v.type = LEPT_FALSE;		//这个在这里用什么好像都没有关系 反正在lept_parse中都会改为LEPT_NULL  然后在对应类型的解析器中再改对
+	v.type = LEPT_FALSE;		//这个在这里用什么都没有关系 反正在lept_parse中都会改为LEPT_NULL  然后在对应类型的解析器中再改对
 	EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "true"));
 	EXPECT_EQ_INT(LEPT_TRUE, lept_get_type(&v));
 }
