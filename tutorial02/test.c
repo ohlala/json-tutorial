@@ -134,5 +134,6 @@ static void test_parse() {
 int main() {
     test_parse();
     printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
+	getchar();
     return main_ret;
 }
