@@ -33,6 +33,8 @@ static int lept_parse_literal(lept_context* c, lept_value* v, const char* litera
 static int lept_parse_number(lept_context* c, lept_value* v) {
     char* end;
     /* \TODO validate number */
+
+
     v->n = strtod(c->json, &end);
     if (c->json == end)
         return LEPT_PARSE_INVALID_VALUE;

@@ -70,6 +70,11 @@ static void test_parse_number() {
     TEST_NUMBER(1.234E+10, "1.234E+10");
     TEST_NUMBER(1.234E-10, "1.234E-10");
     TEST_NUMBER(0.0, "1e-10000"); /* must underflow */
+
+#if 1
+	TEST_NUMBER(4.9E-324, "4.9E-324");	/* Min. subnormal positive double */
+	TEST_NUMBER(1.7976931348623157E+308, "1.7976931348623157E+308");  /* Max. Double */
+#endif	
 }
 
 #define TEST_ERROR(error, json)\
@@ -89,7 +94,7 @@ static void test_parse_invalid_value() {
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "nul");
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "?");
 
-#if 0
+#if 1
     /* invalid number */
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "+0");
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "+1");
