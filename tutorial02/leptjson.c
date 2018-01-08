@@ -1,11 +1,14 @@
 #include "leptjson.h"
 #include <assert.h>  /* assert() */
 #include <stdlib.h>  /* NULL, strtod() */
+#include <stdio.h>
+#include <errno.h>
 
 #define EXPECT(c, ch)       do { assert(*c->json == (ch)); c->json++; } while(0)
 
 typedef struct {
     const char* json;
+	lept_type type;
 }lept_context;
 
 static void lept_parse_whitespace(lept_context* c) {
@@ -15,7 +18,7 @@ static void lept_parse_whitespace(lept_context* c) {
     c->json = p;
 }
 
-//重构合并 lept_parse_null()、lept_parse_false()、lept_parse_true 为 lept_parse_literal()
+//Q1  重构合并 lept_parse_null()、lept_parse_false()、lept_parse_true 为 lept_parse_literal()
 
 static int lept_parse_literal(lept_context* c, lept_value* v, const char* literal, lept_type type) {
 	int i;
@@ -30,15 +33,44 @@ static int lept_parse_literal(lept_context* c, lept_value* v, const char* litera
 	return LEPT_PARSE_OK;	
 }
 
+#define ISDIGIT(ch)         ((ch) >= '0' && (ch) <= '9')
+#define ISDIGIT1TO9(ch)     ((ch) >= '1' && (ch) <= '9')
+
 static int lept_parse_number(lept_context* c, lept_value* v) {
-    char* end;
-    /* \TODO validate number */
+	//不清楚这个end干嘛用
+	char* end;
 
-
-    v->n = strtod(c->json, &end);
+    /* \TODO validate number 
+	编写程序检测传入的context是不是满足json数值的要求
+	*/
+	
+	char* p = c->json;
+	if (*p == '-') p++;
+	if (*p == '0') p++;
+	else {
+		if (!ISDIGIT1TO9(*p)) return LEPT_PARSE_INVALID_VALUE;
+		for (; ISDIGIT(*p); p++);
+	}
+	if (*p == '.') {
+		p++;
+		if (!ISDIGIT(*p)) return LEPT_PARSE_INVALID_VALUE;
+		for (; ISDIGIT(*p); p++);
+	}
+	if (*p == 'e' || *p == 'E') {
+		p++;
+		if (*p == '+' || *p == '-') p++;
+		if (!ISDIGIT(*p)) return LEPT_PARSE_INVALID_VALUE;
+		for (; ISDIGIT(*p); p++);
+	}
+	//??
+	errno = 0;
+    v->n = strtod(c->json, NULL);
+	if (errno == ERANGE) {
+		return LEPT_PARSE_NUMBER_TOO_BIG;
+	}
     if (c->json == end)
         return LEPT_PARSE_INVALID_VALUE;
-    c->json = end;
+    c->json = p;
     v->type = LEPT_NUMBER;
     return LEPT_PARSE_OK;
 }
