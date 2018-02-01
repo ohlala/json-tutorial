@@ -102,6 +102,10 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
             case '\0':
                 c->top = head;
                 return LEPT_PARSE_MISS_QUOTATION_MARK;
+//   TEST_STRING("Hello\nWorld", "\"Hello\\nWorld\"");
+//   TEST_STRING("\" \\ / \b \f \n \r \t", "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
+			case '\\':
+				*p++;
 			case '\\':
 				PUTC(c, '\\'); break;
 			case '/':
@@ -110,8 +114,7 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
 				PUTC(c, '\b'); break;
 			case '\f':
 				PUTC(c, '\f'); break;
-			case '\n':
-				PUTC(c, '\n'); break;
+			
 			case '\r':
 				PUTC(c, '\r'); break;
 			case '\t':
@@ -180,10 +183,12 @@ void lept_set_boolean(lept_value* v, int b) {
     /* \TODO */
 	assert(v != NULL);
 	lept_free(v);
-	if (b == 1)
+	if (b == 1) {
 		v->type = LEPT_TRUE;
-	else
+	}
+	else {
 		v->type = LEPT_FALSE;
+	}
 }
 
 double lept_get_number(const lept_value* v) {
