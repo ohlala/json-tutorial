@@ -104,23 +104,36 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
                 return LEPT_PARSE_MISS_QUOTATION_MARK;
 //   TEST_STRING("Hello\nWorld", "\"Hello\\nWorld\"");
 //   TEST_STRING("\" \\ / \b \f \n \r \t", "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
+//   在c语言中一个\后面接字符表示某个转义字符，JSON在解析的时候要沿着字符串一个一个读进来 
+//   读两个//才会被c语言当做一个/存进来
 			case '\\':
-				*p++;
-			case '\\':
-				PUTC(c, '\\'); break;
-			case '/':
-				PUTC(c, '/'); break;
-			case '\b':
-				PUTC(c, '\b'); break;
-			case '\f':
-				PUTC(c, '\f'); break;
-			
-			case '\r':
-				PUTC(c, '\r'); break;
-			case '\t':
-				PUTC(c, '\t'); break;
-            default:
-                PUTC(c, ch);
+				switch ((*p++))
+				{	
+				case 't': 
+					PUTC(c, '\t'); break;
+				case 'n':
+					PUTC(c, '\n'); break;
+				case 'b':
+					PUTC(c, '\b'); break;
+				case 'f':
+					PUTC(c, '\f'); break;
+				case 'r':
+					PUTC(c, '\r'); break;
+				case '\"':
+					PUTC(c, '\"'); break;
+				case '\\':
+					PUTC(c, '\\'); break;
+				case '/':
+					PUTC(c, '/'); break;
+				default: 
+					return LEPT_PARSE_INVALID_STRING_ESCAPE; break;
+				} break;
+			default:
+				if ((unsigned char)ch < 0x20) {
+				//	c->top = head;
+					return LEPT_PARSE_INVALID_STRING_CHAR;
+				}
+				PUTC(c, ch);
         }
     }
 }
