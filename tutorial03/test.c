@@ -3,6 +3,11 @@
 #include <string.h>
 #include "leptjson.h"
 
+#ifdef _WINDOWS
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+
 static int main_ret = 0;
 static int test_count = 0;
 static int test_pass = 0;
@@ -194,7 +199,7 @@ static void test_access_boolean() {
     /* Use EXPECT_TRUE() and EXPECT_FALSE() */
 	lept_value v;
 	lept_init(&v);
-//	lept_set_string(&v, "a", 1);
+	lept_set_string(&v, "a", 1);
 	lept_set_boolean(&v, 1);
 	EXPECT_TRUE(lept_get_type(&v));
 	lept_set_boolean(&v, 0);
@@ -244,6 +249,10 @@ static void test_parse() {
 }
 
 int main() {
+	#ifdef _WINDOWS
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	#endif
+
     test_parse();
     printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
 	getchar();
