@@ -1,9 +1,10 @@
 #ifdef _WINDOWS
 #define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
 #include <crtdbg.h>
 #endif
 #include <stdio.h>
-#include <stdlib.h>
+
 #include <string.h>
 #include "leptjson.h"
 
@@ -129,12 +130,19 @@ static void test_parse_string() {
 
 static void test_parse_array() {
     lept_value v;
-
     lept_init(&v);
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ ]"));
     EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(0, lept_get_array_size(&v));
     lept_free(&v);
+	EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[null, false, true, 123, \"abc\"]"));
+	EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
+	EXPECT_EQ_SIZE_T(5, lept_get_array_size(&v));
+	lept_free(&v);
+	EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[[], [0], [0, 1], [0, 1, 2]]"));
+	EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
+	EXPECT_EQ_SIZE_T(4, lept_get_array_size(&v));
+	lept_free(&v);
 }
 
 #define TEST_ERROR(error, json)\
@@ -305,9 +313,11 @@ static void test_access() {
 int main() {
 #ifdef _WINDOWS
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE, _CRT_ERROR |_CRTDBG_MODE_DEBUG);
 #endif
     test_parse();
     test_access();
     printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
+	getchar();
     return main_ret;
 }
