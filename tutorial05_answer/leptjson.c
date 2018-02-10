@@ -140,6 +140,12 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
                 len = c->top - head;
                 lept_set_string(v, (const char*)lept_context_pop(c, len), len);
                 c->json = p;
+				//int mmm = sizeof(lept_value);
+				//int a = sizeof(v->type);
+				//int b = sizeof(v->u);
+				//int cc = sizeof(v->u.s);
+				//int dd = sizeof(v);
+				//int m = 0;
                 return LEPT_PARSE_OK;
             case '\\':
                 switch (*p++) {
