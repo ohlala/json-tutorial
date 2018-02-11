@@ -30,6 +30,7 @@ typedef struct {
     size_t size, top;
 }lept_context;
 
+//返回一个指向stack头部的指针，自己把值填进去
 static void* lept_context_push(lept_context* c, size_t size) {
     void* ret;
     assert(size > 0);
@@ -228,6 +229,7 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
             v->u.a.size = size;
             size *= sizeof(lept_value);
             memcpy(v->u.a.e = (lept_value*)malloc(size), lept_context_pop(c, size), size);
+			//如果size乘了sizeof不会从这个出口出 这个是返回正确的出口  下面是错的 
             return LEPT_PARSE_OK;
         }
         else {
@@ -260,6 +262,7 @@ static int lept_parse_object(lept_context* c, lept_value* v) {
         char* str;
         lept_init(&m.v);
         /* parse key */
+		// "  \"  到底有什么区别？   好像没有啊   试了一下 '\" ' == '"' 成立 
         if (*c->json != '"') {
             ret = LEPT_PARSE_MISS_KEY;
             break;
@@ -267,7 +270,7 @@ static int lept_parse_object(lept_context* c, lept_value* v) {
         if ((ret = lept_parse_string_raw(c, &str, &m.klen)) != LEPT_PARSE_OK)
             break;
         memcpy(m.k = (char*)malloc(m.klen + 1), str, m.klen);
-        m.k[m.klen] = '\0';
+        m.k[m.klen] = '\0';	//字符串后面要加上尾零 不然会出错
         /* parse ws colon ws */
         lept_parse_whitespace(c);
         if (*c->json != ':') {
@@ -348,6 +351,39 @@ int lept_parse(lept_value* v, const char* json) {
 
 static void lept_stringify_string(lept_context* c, const char* s, size_t len) {
     /* ... */
+	PUTC(c, '\"');
+
+	for (size_t i = 0; i < len; i++) {
+		switch (s[i])
+		{
+		case '\\': PUTC(c, '\\'); PUTC(c, '\\'); break;
+		case '\"': PUTC(c, '\\'); PUTC(c, '\"'); break;
+		case '/': PUTC(c, '/'); break;
+		case '\b': PUTC(c, '\\'); PUTC(c, 'b'); break;
+		case '\f': PUTC(c, '\\'); PUTC(c, 'f'); break;
+		case '\n': PUTC(c, '\\'); PUTC(c,'n'); break;
+		case '\r': PUTC(c, '\\'); PUTC(c, 'r'); break;
+		case '\t': PUTC(c, '\\'); PUTC(c, 't'); break;
+			//我认为这样做是有问题的 不能完全解析utf-8 自己加了测试以后就通不过。。。
+		default:
+			if (s[i] < 0x20) {
+				char buffer[7];
+				sprintf(buffer, "\\u%04X", s[i]);
+				PUTS(c, buffer, 6);
+			}
+			else
+				PUTC(c, s[i]);
+		/*case 'u':	break;
+		default:	PUTC(c, s[i]); break;*/
+		/*case '\"':
+			*len = c->top - head;
+			*str = lept_context_pop(c, *len);
+			c->json = p;
+			return LEPT_PARSE_OK;	*/
+		
+		}
+	}
+	 PUTC(c, '\"');
 }
 
 static void lept_stringify_value(lept_context* c, const lept_value* v) {
@@ -359,9 +395,25 @@ static void lept_stringify_value(lept_context* c, const lept_value* v) {
         case LEPT_STRING: lept_stringify_string(c, v->u.s.s, v->u.s.len); break;
         case LEPT_ARRAY:
             /* ... */
+			PUTC(c, '[');
+			for (size_t i = 0; i < v->u.a.size; i++) {
+				lept_stringify_value(c, &v->u.a.e[i]);
+				if (i + 1 < v->u.a.size)
+					PUTC(c, ',');
+			}
+			PUTC(c, ']');
             break;
         case LEPT_OBJECT:
             /* ... */
+			PUTC(c, '{');
+			for (size_t i = 0; i < v->u.o.size; i++) {
+				lept_stringify_string(c, (&v->u.o.m[i])->k, (v->u.o.m)->klen);
+				PUTC(c, ':');
+				lept_stringify_value(c, &(&v->u.o.m[i])->v);
+				if (i + 1 < v->u.o.size)
+				PUTC(c, ',');
+			}
+			PUTC(c, '}');
             break;
         default: assert(0 && "invalid type");
     }
