@@ -209,7 +209,10 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
 			break;
 		}
         memcpy(lept_context_push(c, sizeof(lept_value)), &e, sizeof(lept_value));
-//		lept_free(&e);  //像你妈个魔教中人
+		//lept_free(&e);  
+		/*像你妈个魔教中人
+		这里不能对e进行free，因为memcpy复制的时候复制的是结构体，对string作为element来说，
+		结构体中保存的是它的指针，对e进行free会释放string的内容*/
         size++;
 		lept_parse_whitespace(c);
 		if (*c->json == ',') {
