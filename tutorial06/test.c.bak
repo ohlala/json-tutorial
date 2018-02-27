@@ -422,7 +422,6 @@ static void test_access() {
 int main() {
 #ifdef _WINDOWS
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    //内存泄漏检测的结果需要程序正常执行结束（不是关闭）以后在输出窗口中看
 #endif
     test_parse();
     test_access();
